@@ -1179,7 +1179,7 @@ async function sandworm() {
     const choice = await askQuestion('A mighty Sandworm emerges from the sand and points its massive maw at you! what will you dow? (fight/run/surrender) ')
     if (choice === 'fight') {
         console.log(`Prepare yourself, ${names.at(-1)}!`)
-        rl.close()
+        sandwormFight()
     } else if (choice === 'run') {
         console.log('You somehow escape back to where you started!')
         badlands()
@@ -1350,16 +1350,35 @@ async function fishingVillage() {
   if (choice === "explore") {
     console.log(
       "An old fisherman eyes you warily before beckoning for you to come closer.",
-    );
+    ); 
+    quest()
+  } else if (choice === "shop") {
+    console.log("You decide to see what the shop has to offer.");
+    fishingShop();
+  } else if (choice === "rest") {
+    console.log("You go to the inn and pay for a room before resting.");
+    health = 100
+    newPurse = purse - 10
+    purse = newPurse
+    console.log(`Your purse now contains: ${purse} and your health is: ${health}.`)
+    fishingVillage();
+  } else if (choice === "help") {
+    states.push(fishingVillage);
+    await help();
+  } else if (choice === "quit") {
+    states.push(fishingVillage);
+    await endGame();
+  }
+   async function quest() {
     const answer = await askQuestion(
       "He says that a Kraken has been terrorizing the waters. Will you offer to kill it? (yes/no) ",
     );
-    async function quest() {
+  
     if (answer === "yes") {
       console.log(
         "He thanks you before guiding you to the boat that will take you to the beast",
       );
-      rl.close();
+      krakenFight();
     } else if (answer === "no") {
       console.log(
         "The old fisherman nods his understanding, though he is disappointed.",
@@ -1368,7 +1387,7 @@ async function fishingVillage() {
     } else {
       console.log('The old fisherman is waiting for an answer!')
       quest()
-    }
+    } 
       }
     async function noAnswer() {
       const decide = await askQuestion(
@@ -1436,24 +1455,9 @@ async function fishingVillage() {
         }
       }
     }
-  } else if (choice === "shop") {
-    console.log("You decide to see what the shop has to offer.");
-    fishingShop();
-  } else if (choice === "rest") {
-    console.log("You go to the inn and pay for a room before resting.");
-    health = 100
-    newPurse = purse - 10
-    purse = newPurse
-    console.log(`Your purse now contains: ${purse} and your health is: ${health}.`)
-    fishingVillage();
-  } else if (choice === "help") {
-    states.push(fishingVillage);
-    await help();
-  } else if (choice === "quit") {
-    states.push(fishingVillage);
-    await endGame();
   }
-}
+
+
 
 async function fishingShop() {
   priceArmor = 50;
@@ -1483,7 +1487,7 @@ async function fishingShop() {
     fishingShop();
   } else if (choice === "leave") {
     console.log("You finish up and continue on your way.");
-    krakenWin();
+    fishingVillage();
   } else if (choice === "help") {
     states.push(villageShop);
     await help();
@@ -1586,9 +1590,9 @@ async function krakenWin() {
         console.log(
           "You decide to continue your journey and leave the village",
         );
-        silverHills
+        silverHills()
       } else if (decide === "shop") {
-        fishingShop();
+        fishingShopWin();
       } else if (decide === "rest") {
         console.log("You go to the inn and pay for a room before resting.");
         newPurse = purse - 10;
@@ -1598,95 +1602,64 @@ async function krakenWin() {
           `Your purse now contains: ${purse} and your health is now ${health}`,
         );
         krakenWin();
+      } else if (choice === 'help') {
+        states.push(krakenWin)
+        await help()
+      } else if (choice === 'quit') {
+        states.push(krakenWin)
+        await endGame()
       } else {
         console.log('Make a decision!')
         krakenWin()
       } 
 }
 
+async function fishingShopWin() {
+  priceArmor = 50;
+  pricePotion = 20;
+  console.log(
+    "Prices for the items are 20 Gold Coins for some health and 50 Gold Coins for armor",
+  );
+  const choice = await askQuestion(
+    "You approach the shop and see that it has several items. Would you like to buy something? (health/armor/leave) ",
+  );
+  if (choice === "health" && pricePotion <= purse) {
+    console.log("You just bought some health! You feel refreshed.");
+    health = 100;
+    console.log(`Your health is now: ${health}`);
+    newPurse = purse - 20;
+    purse = newPurse;
+    console.log(`Your purse now contains: ${purse} Gold Coins`);
+    fishingShopWin();
+  } else if (choice === "armor" && priceArmor <= purse) {
+    console.log("You just purchased some armor!");
+    newArmor = armor + 50;
+    armor = newArmor;
+    newPurse = purse - 50;
+    purse = newPurse;
+    console.log(`Your armor level is now: ${armor}.`);
+    console.log(`Your purse now contains: ${purse} Gold Coins`);
+    fishingShopWin();
+  } else if (choice === "leave") {
+    console.log("You finish up and continue on your way.");
+    krakenWin();
+  } else if (choice === "help") {
+    states.push(villageShopWin);
+    await help();
+  } else if (choice === "quit") {
+    states.push(villageShopWin);
+    await endGame();
+  } else {
+    console.log("Don't waste the shopkeepers time!");
+    fishingShopWin();
+  }
+}
+
 async function oasis() {
   console.log("You approach the Oasis to find a bustling small village thriving within the lush greenery");
   const choice = await askQuestion('You look around and see that there is a small shop and a small inn. What will you do? (explore/shop/rest)')
   if (choice === 'explore') {
-    async function quest() {
-    const answer = await askQuestion('A young warrior approaches you with haunted eyes before he asks you to slay the elemental that killed his friends. (yes/no)')
-    if (answer === 'yes') {
-      console.log('You accept the quest and walk out of the Oasis in the direction of the Elemental.')
-      sandElementalFight()
-    } else if (answer === 'no') {
-      console.log('The young warriors head lowers as he nods his understanding with a hopeless look in his eyes.')
-      oasisNo()
-    } else {
-      console.log("I think this young man deserves an answer, don't you?")
-      quest()
-    }
-  }
-    async function oasisNo() {
-      const decide = await askQuestion('The Oasis still lies before you with a couple of choices that you could make. (leave/shop/rest)')
-      if (decide === 'leave') {
-        console.log('You leave the Oasis and continue on with your journey')
-        silverHills()
-      } else if (decide === 'shop') {
-        console.log('You walk into the shop and see several things that adventurers like yourself would be interested in.')
-        villageShop()
-      } else if (decide === 'rest') {
-        console.log('You go to the inn and pay for a room before resting your weary bones.')
-        health = 100
-        newPurse = purse - 10
-        purse = newPurse
-        console.log(`Your health is now: ${health} and your purse now contains: ${purse}.`)
-        oasisNo()
-      } else if (decide === 'help') {
-        states.push(oasisNo)
-        await help()
-      } else if (decide === 'quit') {
-        states.push(oasisNo)
-        await endGame()
-      } else {
-        console.log('The Oasis is beautiful, but you still need to make a decision.')
-        oasisNo()
-      }
-      async function villageShop() {
-        priceArmor = 50;
-        pricePotion = 20;
-        console.log(
-          "Prices for the items are 20 Gold Coins for some health and 50 Gold Coins for armor",
-        );
-        const choice = await askQuestion(
-          "You approach the shop and see that it has several items. Would you like to buy something? (health/armor/leave) ",
-        );
-        if (choice === "health" && pricePotion <= purse) {
-          console.log("You just bought some health! You feel refreshed.");
-          health = 100;
-          console.log(`Your health is now: ${health}`);
-          newPurse = purse - 20;
-          purse = newPurse;
-          console.log(`Your purse now contains: ${purse} Gold Coins`);
-          villageShop();
-        } else if (choice === "armor" && priceArmor <= purse) {
-          console.log("You just purchased some armor!");
-          newArmor = armor + 50;
-          armor = newArmor;
-          newPurse = purse - 50;
-          purse = newPurse;
-          console.log(`Your armor level is now: ${armor}.`);
-          console.log(`Your purse now contains: ${purse} Gold Coins`);
-          villageShop();
-        } else if (choice === "leave") {
-          console.log("You finish up and continue on your way.");
-          noAnswer();
-        } else if (choice === "help") {
-          states.push(villageShop);
-          await help();
-        } else if (choice === "quit") {
-          states.push(villageShop);
-          await endGame();
-        } else {
-          console.log("Don't waste the shopkeepers time!");
-          villageShop();
-        }
-    }
-  }
+    quest()
    } else if (choice === 'shop') {
     console.log('You enter the shop and see various things that an adventurer might need.')
     oasisShop()
@@ -1704,6 +1677,100 @@ async function oasis() {
   } else {
     console.log('The Oasis is beautiful, but you still need to make a choice.')
     oasis()
+  } async function quest() {
+    const answer = await askQuestion(
+      "A young warrior approaches you with haunted eyes before he asks you to slay the elemental that killed his friends. (yes/no)",
+    );
+    if (answer === "yes") {
+      console.log(
+        "You accept the quest and walk out of the Oasis in the direction of the Elemental.",
+      );
+      sandElementalFight();
+    } else if (answer === "no") {
+      console.log(
+        "The young warriors head lowers as he nods his understanding with a hopeless look in his eyes.",
+      );
+      oasisNo();
+    } else {
+      console.log("I think this young man deserves an answer, don't you?");
+      quest();
+    }
+  }
+  async function oasisNo() {
+    const decide = await askQuestion(
+      "The Oasis still lies before you with a couple of choices that you could make. (leave/shop/rest)",
+    );
+    if (decide === "leave") {
+      console.log("You leave the Oasis and continue on with your journey");
+      silverHills();
+    } else if (decide === "shop") {
+      console.log(
+        "You walk into the shop and see several things that adventurers like yourself would be interested in.",
+      );
+      villageShop();
+    } else if (decide === "rest") {
+      console.log(
+        "You go to the inn and pay for a room before resting your weary bones.",
+      );
+      health = 100;
+      newPurse = purse - 10;
+      purse = newPurse;
+      console.log(
+        `Your health is now: ${health} and your purse now contains: ${purse}.`,
+      );
+      oasisNo();
+    } else if (decide === "help") {
+      states.push(oasisNo);
+      await help();
+    } else if (decide === "quit") {
+      states.push(oasisNo);
+      await endGame();
+    } else {
+      console.log(
+        "The Oasis is beautiful, but you still need to make a decision.",
+      );
+      oasisNo();
+    }
+    async function villageShop() {
+      priceArmor = 50;
+      pricePotion = 20;
+      console.log(
+        "Prices for the items are 20 Gold Coins for some health and 50 Gold Coins for armor",
+      );
+      const choice = await askQuestion(
+        "You approach the shop and see that it has several items. Would you like to buy something? (health/armor/leave) ",
+      );
+      if (choice === "health" && pricePotion <= purse) {
+        console.log("You just bought some health! You feel refreshed.");
+        health = 100;
+        console.log(`Your health is now: ${health}`);
+        newPurse = purse - 20;
+        purse = newPurse;
+        console.log(`Your purse now contains: ${purse} Gold Coins`);
+        villageShop();
+      } else if (choice === "armor" && priceArmor <= purse) {
+        console.log("You just purchased some armor!");
+        newArmor = armor + 50;
+        armor = newArmor;
+        newPurse = purse - 50;
+        purse = newPurse;
+        console.log(`Your armor level is now: ${armor}.`);
+        console.log(`Your purse now contains: ${purse} Gold Coins`);
+        villageShop();
+      } else if (choice === "leave") {
+        console.log("You finish up and continue on your way.");
+        oasisNo();
+      } else if (choice === "help") {
+        states.push(villageShop);
+        await help();
+      } else if (choice === "quit") {
+        states.push(villageShop);
+        await endGame();
+      } else {
+        console.log("Don't waste the shopkeepers time!");
+        villageShop();
+      }
+    }
   }
 }
 
@@ -1935,7 +2002,7 @@ async function iceElementalFight() {
     newPurse = purse + 80;
     purse = newPurse;
     console.log(`Your purse contains: ${purse} Gold Coins`);
-    sandWin();
+    winteryPines();
   } else if (health <= 0) {
     death();
   } else {
@@ -2009,10 +2076,10 @@ async function winteryPines() {
   const choice = await askQuestion('You look off in the distance and see a village, but you can bypass it. What will you do? (village/bypass/camp) ')
   if (choice === 'village') {
     console.log('You make your way towards the village as you feel the Lich Kings oppressive presence more with each step.')
-    rl.close()
+    winterVillage()
   } else if (choice === 'bypass') {
     console.log('You decide to bypass the Village, letting the Lich Kings oppressive presence guide you towards him.')
-    rl.close()
+    lichCrypt()
   } else if (choice === 'camp') {
     console.log('You decide to make camp while you weigh your decisions.')
     health = 100
@@ -2035,7 +2102,7 @@ async function winterVillage() {
     console.log('He tells you that the Lich King demands an offering of a virgin woman to sacrifice to keep him from enslaving them all.')
     console.log('Despite the continued offerings, his presence alone has affected them so badly that the people are starving.')
     console.log('After he explains everything, he points you towards the crypt with a sympathetic look on his face.')
-    rl.close()
+    lichCrypt()
   } else if (choice === 'shop') {
     console.log('You enter the shop to find a depressed shop keeper and his equally depressed assistant.')
     villageShop()
@@ -2083,7 +2150,7 @@ async function winterVillage() {
           villageShop();
         } else if (choice === "leave") {
           console.log("You finish up and continue on your way.");
-          sandWin();
+          winterVillage();
         } else if (choice === "help") {
           states.push(villageShop);
           await help();
@@ -2106,10 +2173,10 @@ async function lichCrypt() {
     console.log('You look around the crypt and into some coffins. You find an amulet that fills you with power and makes your sword glow brighter when you put it on.')
     amulet.push('Amulet of Divine Light')
     console.log(`Your now wearing the ${amulet.at(-1)}!`)
-    rl.close()
+    lichKing()
   } else if (choice ==='straight') {
     console.log('You decide to push on into the source of the presence with grim determination.')
-    rl.close()
+    lichKing()
   } else if (choice === 'camp') {
     console.log('You decide to make camp and rest as much as you can with the presence bearing down on you.')
     health = 100
@@ -2129,26 +2196,22 @@ async function lichCrypt() {
 
 async function lichKing() {
   console.log(
-    "You approach the Lich king with determination in your eyes and stance as you grip the Sword of Neremar firmly.",
+    "The Lich King looms before you on his throne. He silently stands before approaching you with deadly intent.",
   );
-  console.log(
-    "You both know why you're here. You waste no time with pleasantries as you begin to circle one another.",
-  );
-  const lichDamage = 60;
-  if (amulet['Amulet of Divine Light'] === true) {
-    newLich = lichHealth - 100
-    lichHealth = newLich
-    newLichArmor = lichArmor - 100
-    lichArmor = newLichArmor
+  if (amulet.at(-1) === "Amulet of Divine Light") {
+    newLichHealth = lichHealth - 100;
+    lichHealth = newLichHealth;
+    amulet.pop();
   }
-  if (lichHealth <= 0 && lichArmor <= 0) {
+  const lichDamage = 60;
+  if (lichHealth <= 0) {
     console.log(
-      "You are victorious! You collect the loot from the dust that marks the Lich King's remains!",
+      "You are victorious! You collect the loot from the snow and ice that marks its remains!",
     );
-    newPurse = purse + 300;
+    newPurse = purse + 80;
     purse = newPurse;
     console.log(`Your purse contains: ${purse} Gold Coins`);
-    sandWin();
+    cityWinGame();
   } else if (health <= 0) {
     death();
   } else {
@@ -2157,15 +2220,18 @@ async function lichKing() {
     );
     if (choice === "attack") {
       console.log(
-        "You strike the Lich King hard and it falters slightly before striking back!",
+        "You strike The Lich King hard and he stumbles slightly before quickly counter attacking!",
       );
-      if (armor >= 30) {
-        newArmor = armor - 30;
+      newLichHealth = lichHealth - 50;
+      lichHealth = newLichHealth;
+      console.log(`The Lich King's health is ${lichHealth}`);
+      if (armor >= 60) {
+        newArmor = armor - 60;
         armor = newArmor;
         console.log(`Armor and Health is now ${armor} ${health}`);
         lichKing();
-      } else if (lichDamage > armor) {
-        let remainingDamage = lichDamage - armor;
+      } else if (iceElementalDamage > armor) {
+        let remainingDamage = iceElementalDamage - armor;
         armor = 0;
         health -= remainingDamage;
         console.log(`Armor and Health are ${armor} ${health}`);
@@ -2175,24 +2241,7 @@ async function lichKing() {
         health = newHealth;
         console.log(`Armor and Health are now ${armor} ${health}`);
         lichKing();
-      } else if (lichArmor >= 50) {
-        newLichArmor = lichArmor - 50
-        lichArmor = newLichArmor
-        console.log(`The Lich's health and armor are now: ${lichHealth} and ${lichArmor}`)
-        lichKing()
-      } else if (playerDamage > lichArmor) {
-        let remainingLichDamage = playerDamage - armor
-        armor = 0
-        lichHealth -= remainingLichDamage
-        console.log(`Lich health and armor are now: ${lichHealth} and ${lichArmor}`)
-        lichKing()
-      } else if (lichArmor <= 0) {
-        newLichHealth = lichHealth - 50
-        lichHealth = newLichHealth
-        console.log(`The Lich's health is now: ${lichHealth}.`)
-        lichKing()
-      }
-      else {
+      } else {
         newHealth = health - 60;
         health = newHealth;
         console.log(`Armor and Health are ${armor} ${health}`);
@@ -2224,12 +2273,12 @@ async function lichKing() {
       }
     } else {
       console.log(
-        "Make a decision quickly! The Lich King is starting to approach again!",
+        "Make a decision quickly! The Lich King is preparing for another strike!",
       );
       lichKing();
     }
   }
-}
+} 
 
 async function cityWinGame() {
   console.log("You stand over the Lich King's disolving body as a sense of peace overwhelms you. You sheathe your sword as it slowly dims while you exit the crypt,")
@@ -2242,7 +2291,6 @@ async function cityWinGame() {
 }
 
 async function winGame() {
-  console.log("Congratulations! You have won The Sword of Neremar! I want to personally thank you for playing!")
+  console.log(`Congratulations ${names.at(-1)}! You have won The Sword of Neremar! I want to personally thank you for playing!`)
   endGame()
 }
-
