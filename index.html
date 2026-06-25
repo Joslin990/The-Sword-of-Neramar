@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Sword of Neramar</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08061a;--bg-panel:#110d2a;--bg-card:#1a1538;
+  --gold:#c9a227;--gold-light:#e8c84a;--gold-dim:#5a460f;
+  --purple:#4a1a8a;--purple-dark:#2d0f5e;--purple-mid:#6b21a8;
+  --crimson:#7a1010;--crimson-light:#c0392b;
+  --text:#f0e6c8;--text-dim:#9987c2;
+  --border:#2a1a55;--border-gold:#3a2a10;
+}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+  height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  background-image:radial-gradient(ellipse at top,#1a0a3a 0%,#08061a 60%);
+}
+header{
+  background:linear-gradient(135deg,#1c0a3a 0%,#0d1535 100%);
+  border-bottom:2px solid var(--gold-dim);
+  padding:12px 20px 10px;flex-shrink:0;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);
+}
+h1{
+  color:var(--gold-light);font-size:1.55rem;text-align:center;
+  letter-spacing:4px;text-transform:uppercase;
+  text-shadow:0 0 30px rgba(201,162,39,0.7),0 0 60px rgba(201,162,39,0.3);
+  margin-bottom:10px;font-weight:normal;
+}
+h1 span{font-size:1.1rem;opacity:0.7;margin:0 8px}
+#stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.stat{
+  background:rgba(26,21,56,0.8);border:1px solid var(--border);
+  border-radius:5px;padding:4px 14px;font-size:0.82rem;letter-spacing:1px;
+  transition:color 0.3s;
+}
+.stat.hp{border-color:#1a5c30;color:#4ade80}
+.stat.ar{border-color:#1a3a6e;color:#60a5fa}
+.stat.gp{border-color:var(--gold-dim);color:var(--gold-light)}
+.stat.wp{border-color:var(--crimson);color:#fca5a5}
+#output{
+  flex:1;overflow-y:auto;padding:16px 20px;
+  display:flex;flex-direction:column;gap:6px;
+  scrollbar-width:thin;scrollbar-color:var(--gold-dim) var(--bg);
+}
+#output::-webkit-scrollbar{width:5px}
+#output::-webkit-scrollbar-track{background:var(--bg)}
+#output::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
+.msg{
+  max-width:760px;width:100%;margin:0 auto;
+  padding:8px 14px;border-radius:5px;line-height:1.65;font-size:0.93rem;
+}
+.story{
+  color:var(--text);
+  background:rgba(26,21,56,0.35);
+  border-left:3px solid var(--purple);
+}
+.prompt{
+  color:var(--gold-light);font-style:italic;
+  background:rgba(26,21,56,0.6);
+  border-left:3px solid var(--gold);
+}
+.echo{
+  color:#fca5a5;font-weight:bold;
+  background:rgba(120,16,16,0.18);
+  border-left:3px solid var(--crimson);
+}
+.sys{
+  color:var(--text-dim);font-style:italic;text-align:center;
+  border:1px dashed var(--border);background:none;
+}
+.win{
+  color:var(--gold-light);
+  background:rgba(201,162,39,0.12);
+  border:1px solid var(--gold-dim);
+  text-align:center;font-size:1rem;
+}
+.die{
+  color:#f87171;
+  background:rgba(120,16,16,0.2);
+  border:1px solid var(--crimson);
+  text-align:center;
+}
+#bottom{
+  flex-shrink:0;background:var(--bg-panel);
+  border-top:2px solid var(--border);
+  padding:10px 20px 14px;
+}
+#choices{
+  display:flex;flex-wrap:wrap;gap:8px;
+  justify-content:center;margin-bottom:10px;
+  max-width:760px;margin-left:auto;margin-right:auto;
+  min-height:38px;
+}
+.cbtn{
+  background:linear-gradient(135deg,var(--purple-dark),#1a1030);
+  color:var(--gold-light);border:1px solid var(--gold-dim);
+  border-radius:5px;padding:7px 20px;font-size:0.88rem;
+  font-family:inherit;cursor:pointer;letter-spacing:1px;
+  transition:all 0.18s;text-transform:capitalize;
+}
+.cbtn:hover{
+  background:linear-gradient(135deg,var(--purple-mid),var(--crimson));
+  border-color:var(--gold-light);color:#fff;
+  box-shadow:0 0 14px rgba(201,162,39,0.35);
+  transform:translateY(-1px);
+}
+#input-row{
+  display:flex;gap:10px;max-width:760px;margin:0 auto;
+}
+#user-input{
+  flex:1;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:5px;color:var(--text);padding:9px 14px;
+  font-size:0.92rem;font-family:inherit;outline:none;
+  transition:border-color 0.2s;
+}
+#user-input:focus{border-color:var(--gold-dim)}
+#user-input::placeholder{color:var(--text-dim);font-style:italic}
+#submit-btn{
+  background:linear-gradient(135deg,var(--purple-dark),var(--crimson));
+  color:var(--gold-light);border:1px solid var(--gold-dim);
+  border-radius:5px;padding:9px 26px;font-size:0.92rem;
+  font-family:inherit;cursor:pointer;letter-spacing:1px;
+  transition:all 0.18s;
+}
+#submit-btn:hover{
+  background:linear-gradient(135deg,var(--purple-mid),var(--crimson-light));
+  box-shadow:0 0 14px rgba(201,162,39,0.35);
+}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>&#x2694;</span>The Sword of Neramar<span>&#x2694;</span></h1>
+  <div id="stats">
+    <span class="stat hp" id="s-hp">&#9825; Health: 100</span>
+    <span class="stat ar" id="s-ar">&#x2299; Armor: 0</span>
+    <span class="stat gp" id="s-gp">&#9670; Gold: 0</span>
+    <span class="stat wp" id="s-wp">&#x2694; Weapon: None</span>
+  </div>
+</header>
+<div id="output"></div>
+<div id="bottom">
+  <div id="choices"></div>
+  <div id="input-row">
+    <input type="text" id="user-input" placeholder="Type your choice, or click a button above..." autocomplete="off" spellcheck="false">
+    <button id="submit-btn">Enter</button>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let inventory=[],purse=0,armor=0,names=[""],health=100;
+let goblinHealth,robbersHealth,dragonHealth,orcHealth,sandwormHealth;
+let krakenHealth,sandElementalHealth,iceElementalHealth,lichHealth;
+let weapons=[""],states=[],amulet=[],robberDamage=20;
+
+function resetState(){
+  inventory=[];purse=0;armor=0;names=[""];health=100;
+  goblinHealth=40;robbersHealth=100;dragonHealth=150;orcHealth=150;
+  sandwormHealth=180;krakenHealth=200;sandElementalHealth=200;
+  iceElementalHealth=200;lichHealth=400;
+  weapons=[""];states=[];amulet=[];robberDamage=20;
+}
+
+// ── I/O ───────────────────────────────────────────────────────────────────────
+const out=document.getElementById('output');
+const choicesEl=document.getElementById('choices');
+const inputEl=document.getElementById('user-input');
+let resolveInput=null;
+
+function add(text,cls='story'){
+  const d=document.createElement('div');
+  d.className='msg '+cls;d.textContent=text;
+  out.appendChild(d);out.scrollTop=out.scrollHeight;
+}
+
+function updateStats(){
+  document.getElementById('s-hp').textContent='♥ Health: '+health;
+  document.getElementById('s-ar').textContent='⊛ Armor: '+armor;
+  document.getElementById('s-gp').textContent='◆ Gold: '+purse;
+  const w=weapons.length>1?weapons[weapons.length-1]:'None';
+  document.getElementById('s-wp').textContent='⚔ '+w;
+  const hel=document.getElementById('s-hp');
+  hel.style.color=health>60?'#4ade80':health>30?'#fbbf24':'#f87171';
+}
+
+function showButtons(prompt){
+  choicesEl.innerHTML='';
+  const m=prompt.match(/\(([^)]+)\)/);
+  if(!m)return;
+  m[1].split('/').forEach(opt=>{
+    opt=opt.trim();
+    const b=document.createElement('button');
+    b.className='cbtn';b.textContent=opt;
+    b.onclick=()=>submit(opt);
+    choicesEl.appendChild(b);
+  });
+}
+
+function askQuestion(prompt){
+  add(prompt,'prompt');updateStats();showButtons(prompt);
+  inputEl.value='';inputEl.focus();
+  return new Promise(r=>{resolveInput=r;});
+}
+
+function submit(val){
+  if(!resolveInput)return;
+  add('> '+val,'echo');
+  const r=resolveInput;resolveInput=null;
+  choicesEl.innerHTML='';inputEl.value='';
+  setTimeout(()=>r(val),30);
+}
+
+document.getElementById('submit-btn').onclick=()=>{
+  const v=inputEl.value.trim();if(v)submit(v);
+};
+inputEl.addEventListener('keypress',e=>{
+  if(e.key==='Enter'){const v=inputEl.value.trim();if(v)submit(v);}
+});
+
+// ── Game ──────────────────────────────────────────────────────────────────────
+async function startGame(){
+  resetState();out.innerHTML='';updateStats();
+  add('Welcome to The Sword of Neramar!');
+  add('Your choices will affect your life! Do you have the will to prevail and attain the Sword of Neramar?');
+  await instructions();
+}
+
+async function endGame(){
+  const c=await askQuestion('Do you really want to quit? (yes/no)');
+  if(c==='yes'){add('Thank you for playing The Sword of Neramar!','sys');add('Refresh the page to play again.','sys');}
+  else if(c==='no'){add("Your adventure awaits!");const p=states.pop();if(p)await p();}
+  else{add('Please make a choice.');await endGame();}
+}
+
+async function instructions(){
+  add('Instructions:');
+  add('1. You will be faced with a choice in every scene. Every choice has a consequence, so choose wisely!');
+  add('2. If you need help at any time, type \'help\' and you will be returned to this screen.');
+  add('3. You can regain health by choosing to \'camp\' or \'rest\' when the option is available!');
+  add('4. You can quit at any time by typing \'quit\'!');
+  const c=await askQuestion('Do you understand these instructions? (yes/no)');
+  if(c==='yes'){add('Great!');await getName();}
+  else if(c==='no'){add('Let\'s go over the instructions again.');await instructions();}
+  else{add('Invalid choice.');await instructions();}
+}
+
+async function help(){
+  add('Instructions:');
+  add('1. You will be faced with a choice in every scene. Every choice has a consequence, so choose wisely!');
+  add('2. If you need help at any time, type \'help\' and you will be returned to this screen.');
+  add('3. You can regain health by choosing to \'camp\' or \'rest\' when the option is available!');
+  add('4. You can quit at any time by typing \'quit\'!');
+  if(!states.length){add('No previous state to return to.');return;}
+  const a=await askQuestion('Do you understand everything? (yes/no)');
+  if(a==='yes'){add('Good. Let\'s return to your adventure, '+names[names.length-1]);out.innerHTML='';const p=states.pop();await p();}
+  else if(a==='no'){add('Let\'s go over the instructions once more.');await help();}
+  else{add('Invalid answer!');await help();}
+}
+
+async function getName(){
+  const n=await askQuestion('What is your name, brave adventurer?');
+  names.push(n);add('Hello '+names[names.length-1]);await weaponChoice();
+}
+
+async function weaponChoice(){
+  const c=await askQuestion('Please choose your weapon (sword/spear/bow/mace)');
+  if(['sword','spear','bow','mace'].includes(c)){
+    const label=c.charAt(0).toUpperCase()+c.slice(1);
+    add('You have chosen the '+label+'!');weapons.push(label);
+    add('Your weapon: '+weapons[weapons.length-1]);updateStats();await forest();
+  }else if(c==='quit'){states.push(weaponChoice);await endGame();}
+  else if(c==='help'){states.push(weaponChoice);await help();}
+  else{add('Invalid choice! Please choose again!');await weaponChoice();}
+}
+
+async function forest(){
+  add('You start your adventure at a lush forest full of life and greenery.');
+  const c=await askQuestion('There are two paths to choose from. Which way will you go? (left/right/camp)');
+  if(c==='left'){add('You go down the left path, deeper into the forest.');await goblins();}
+  else if(c==='right'){add('You go down the right path toward a rocky outcropping.');await cave();}
+  else if(c==='camp'){add('You make camp. Your health is restored.');health=100;updateStats();await forest();}
+  else if(c==='help'){states.push(forest);await help();}
+  else if(c==='quit'){states.push(forest);await endGame();}
+  else{add('You must make a choice, '+names[names.length-1]+'.');await forest();}
+}
+
+async function cave(){
+  add('You approach the rocky outcropping and notice something in the side of it.');
+  const c=await askQuestion('It appears to be a small cave entrance! What do you do? (enter/continue/camp)');
+  if(c==='enter'){add('You squeeze through the entrance and see an abandoned underground city in the distance.');await undergroundCity();}
+  else if(c==='continue'){add('You decide to pass it up, though a nagging feeling tries to pull you back.');await plains();}
+  else if(c==='camp'){add('You set up camp to rest.');health=100;add('Current Health: '+health);updateStats();await cave();}
+  else if(c==='help'){states.push(cave);await help();}
+  else if(c==='quit'){states.push(cave);await endGame();}
+  else{add('A decision needs to be made!');await cave();}
+}
+
+async function undergroundCity(){
+  add('You approach the city cautiously. Once you get to it, you realize it\'s empty!');
+  const c=await askQuestion('Should you explore or find a way around? (explore/ignore/camp)');
+  if(c==='explore'){add('You find fabulous treasure!');purse+=100;add('Gold: '+purse);updateStats();await plains();}
+  else if(c==='ignore'){add('You bypass the city and find an exit.');await plains();}
+  else if(c==='camp'){add('You make camp.');health=100;add('Health: '+health);updateStats();await undergroundCity();}
+  else if(c==='help'){states.push(undergroundCity);await help();}
+  else if(c==='quit'){states.push(undergroundCity);await endGame();}
+  else{add('You need to make a choice, '+names[names.length-1]);await undergroundCity();}
+}
+
+async function goblins(){
+  add('You walk for an hour before three Goblins leap from the bushes, ready to fight!');
+  const c=await askQuestion('What do you do? (fight/run/surrender)');
+  if(c==='fight'){add('Prepare yourself, '+names[names.length-1]+'!');await goblinFight();}
+  else if(c==='run'){add('You barely escape with your life!');health-=20;add('Health: '+health);updateStats();await forest();}
+  else if(c==='surrender'){add('The Goblins only accept your death!');await death();}
+  else if(c==='help'){states.push(goblins);await help();}
+  else if(c==='quit'){states.push(goblins);await endGame();}
+  else{add('Now is not the time for indecision!');await goblins();}
+}
+
+async function death(){
+  add('You have tragically died!','die');
+  const c=await askQuestion('Would you like to try again? (yes/no)');
+  if(c==='yes')await startGame();
+  else if(c==='no')add('Thank you for playing The Sword of Neramar!','sys');
+  else await death();
+}
+
+async function goblinFight(){
+  if(goblinHealth<=0){add('You are victorious! You loot their slain bodies!','win');purse+=20;add('Gold: '+purse);updateStats();await plains();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('The Goblins look fierce! What will you do? (attack/defend/run)');
+  if(c==='attack'){add('Great hit! They counter attack!');goblinHealth-=20;health-=10;add('Health: '+health+' | Goblin HP: '+goblinHealth);updateStats();await goblinFight();}
+  else if(c==='defend'){add('You block most of it!');health-=5;add('Health: '+health);updateStats();await goblinFight();}
+  else if(c==='run'){add('You escape with only a scratch!');health-=10;updateStats();await forest();}
+  else{add('Quick! Make a choice!');await goblinFight();}
+}
+
+async function plains(){
+  const c=await askQuestion('You emerge from the forest to beautiful plains. There\'s a small village in the distance. (village/ignore/camp)');
+  if(c==='village'){add('You approach the bustling village.');await smallVillage();}
+  else if(c==='ignore'){add('You travel onwards in search of more interesting things.');await ruins();}
+  else if(c==='camp'){add('You make camp.');health=100;add('Health: '+health);updateStats();await plains();}
+  else if(c==='help'){states.push(plains);await help();}
+  else if(c==='quit'){states.push(plains);await endGame();}
+  else{add('You must make a choice!');await plains();}
+}
+
+async function smallVillage(){
+  const c=await askQuestion('You enter the bustling village. What should you do? (explore/shop/rest)');
+  if(c==='explore'){add('A panicked villager approaches you.');await robberQuest();}
+  else if(c==='shop'){add('You approach a well-stocked adventurer\'s shop.');await shopMenu(smallVillage);}
+  else if(c==='rest'){
+    if(purse>=10){add('You buy a room at the inn and rest.');health=100;purse-=10;add('Health: '+health+' | Gold: '+purse);updateStats();await smallVillage();}
+    else{add('You can\'t afford the inn (costs 10 gold)!');await smallVillage();}
+  }
+  else if(c==='help'){states.push(smallVillage);await help();}
+  else if(c==='quit'){states.push(smallVillage);await endGame();}
+  else{add('Make a choice!');await smallVillage();}
+}
+
+async function shopMenu(returnFn,free=false){
+  if(free)add('Everything is free!');
+  else add('Prices: 20 Gold for health potion | 50 Gold for armor');
+  const c=await askQuestion('What would you like to buy? (health/armor/leave)');
+  if(c==='health'){
+    if(free||purse>=20){add('You feel refreshed!');health=100;if(!free)purse-=20;add('Health: '+health+' | Gold: '+purse);updateStats();await shopMenu(returnFn,free);}
+    else{add('Not enough gold!');await shopMenu(returnFn,free);}
+  }else if(c==='armor'){
+    if(free||purse>=50){add('You purchase some armor!');armor+=50;if(!free)purse-=50;add('Armor: '+armor+' | Gold: '+purse);updateStats();await shopMenu(returnFn,free);}
+    else{add('Not enough gold!');await shopMenu(returnFn,free);}
+  }else if(c==='leave'){add('You continue on your way.');await returnFn();}
+  else if(c==='help'){states.push(()=>shopMenu(returnFn,free));await help();}
+  else if(c==='quit'){states.push(()=>shopMenu(returnFn,free));await endGame();}
+  else{add('Don\'t waste the shopkeeper\'s time!');await shopMenu(returnFn,free);}
+}
+
+async function robberQuest(){
+  add('The villager tells you there are robbers on the outskirts of town!');
+  const c=await askQuestion('He offers 100 Gold to clear them out. Do you accept? (yes/no)');
+  if(c==='yes'){add('The villager looks relieved. You head out with your '+weapons[weapons.length-1]+' ready.');await villageQuest();}
+  else if(c==='no'){add('The villager spits at your feet before stomping away.');await smallVillageCoward();}
+  else if(c==='help'){states.push(robberQuest);await help();}
+  else if(c==='quit'){states.push(robberQuest);await endGame();}
+  else{add('The villager begs you to decide!');await robberQuest();}
+}
+
+async function villageQuest(){
+  add('You approach a barricade guarded by four armed robbers.');
+  const c=await askQuestion('They look ready to fight. What do you do? (fight/run/surrender)');
+  if(c==='fight'){add('Prepare yourself, '+names[names.length-1]+'!');await robbersFight();}
+  else if(c==='run'){
+    add('You escape, but must face the villagers.');
+    applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await smallVillageRun();
+  }
+  else if(c==='surrender'){add('The Robbers show no mercy. You are killed.');await death();}
+  else if(c==='help'){states.push(villageQuest);await help();}
+  else if(c==='quit'){states.push(villageQuest);await endGame();}
+  else{add('Hurry and make a choice!');await villageQuest();}
+}
+
+function applyDamage(dmg){
+  if(armor>=dmg){armor-=dmg;}
+  else if(dmg>armor){const r=dmg-armor;armor=0;health-=r;}
+  else{health-=dmg;}
+}
+
+async function robbersFight(){
+  if(robbersHealth<=0){add('You are victorious!','win');purse+=40;add('Gold: '+purse);updateStats();await smallVillageWin();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('What will you do? (attack/defend/run)');
+  if(c==='attack'){
+    add('You deal damage! They counter attack!');robbersHealth-=20;add('Robber HP: '+robbersHealth);
+    applyDamage(robberDamage);add('Health: '+health+' | Armor: '+armor);updateStats();await robbersFight();
+  }else if(c==='defend'){
+    add('You block most of the attacks.');applyDamage(10);add('Health: '+health+' | Armor: '+armor);updateStats();await robbersFight();
+  }else if(c==='run'){
+    add('You run in shame and must face the village.');applyDamage(robberDamage);add('Health: '+health+' | Armor: '+armor);updateStats();await smallVillageRun();
+  }else{add('Make a decision! They want your head!');await robbersFight();}
+}
+
+async function smallVillageWin(){
+  add('The village erupts in cheers! The grateful villager pays you 100 Gold.');
+  purse+=100;add('Gold: '+purse);updateStats();await smallVillageContinue();
+}
+async function smallVillageRun(){
+  add('You return to the village with your head hung low. The villagers refuse to speak to you.');
+  await smallVillageCoward();
+}
+async function smallVillageCoward(){
+  const c=await askQuestion('You must leave before they run you off. (leave)');
+  if(c==='leave'){add('You quickly leave the village.');await ruins();}
+  else await smallVillageCoward();
+}
+async function smallVillageContinue(){
+  const c=await askQuestion('The celebration dies down. What will you do? (leave/shop/rest)');
+  if(c==='leave'){add('You leave to explore further.');await ruins();}
+  else if(c==='shop'){await shopMenu(smallVillageContinue);}
+  else if(c==='rest'){
+    add('You rest at the inn.');purse-=10;health=100;add('Gold: '+purse+' | Health: '+health);updateStats();await smallVillageContinue();
+  }
+  else if(c==='help'){states.push(smallVillageContinue);await help();}
+  else if(c==='quit'){states.push(smallVillageContinue);await endGame();}
+  else{add('You still need to make a choice.');await smallVillageContinue();}
+}
+
+async function ruins(){
+  add('You spot some dark ruins along the winding road.');
+  const c=await askQuestion('Do you enter, or go around and play it safe? (enter/continue/camp)');
+  if(c==='enter'){add('You enter and immediately find 40 Gold Coins!');purse+=40;add('Gold: '+purse);updateStats();await dragon();}
+  else if(c==='continue'){add('You play it safe and circle around.');await pathMerchant();}
+  else if(c==='camp'){add('You make camp.');health=100;updateStats();await ruins();}
+  else if(c==='help'){states.push(ruins);await help();}
+  else if(c==='quit'){states.push(ruins);await endGame();}
+  else{add('You must make a choice!');await ruins();}
+}
+
+async function dragon(){
+  add('You carefully explore the ruins and stumble across a Dragon!');
+  const c=await askQuestion('Do you sneak away, or fight the Dragon? (fight/run)');
+  if(c==='fight'){add('Prepare yourself, '+names[names.length-1]+'!');await dragonFight();}
+  else if(c==='run'){add("The Dragon doesn't notice you as you slip away.");await pathMerchant();}
+  else if(c==='help'){states.push(dragon);await help();}
+  else if(c==='quit'){states.push(dragon);await endGame();}
+  else{add('Hurry! The Dragon could notice you at any moment!');await dragon();}
+}
+
+async function dragonFight(){
+  const dd=30;
+  if(dragonHealth<=0){add('You are victorious!','win');purse+=60;add('Gold: '+purse);updateStats();await pathMerchantWin();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('What will you do? (attack/defend/run)');
+  if(c==='attack'){add('You hit the Dragon! It counter attacks!');dragonHealth-=20;add('Dragon HP: '+dragonHealth);applyDamage(dd);add('Health: '+health+' | Armor: '+armor);updateStats();await dragonFight();}
+  else if(c==='defend'){add('You block most of the Dragon\'s attack.');applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await dragonFight();}
+  else if(c==='run'){add('You narrowly escape the mighty Dragon!');await pathMerchant();}
+  else{add('The Dragon looks hungry! Make a decision!');await dragonFight();}
+}
+
+async function pathMerchant(){
+  add('You come across a friendly-looking Merchant on the road.');
+  const c=await askQuestion('He looks like he has something on his mind. (talk/shop/leave)');
+  if(c==='talk'){
+    const a=await askQuestion('He wants you to slay the Dragon in the ruins for 200 Gold. (yes/no)');
+    if(a==='yes'){add('The merchant beams and sends you on your way.');await dragon();}
+    else if(a==='no'){add('The merchant nods, disappointed. It is a Dragon after all.');await pathMerchant();}
+    else{add('You mumble incoherently.');await pathMerchant();}
+  }
+  else if(c==='shop'){await shopMenu(pathMerchant);}
+  else if(c==='leave'){add('You leave abruptly.');await mountainPass();}
+  else if(c==='help'){states.push(pathMerchant);await help();}
+  else if(c==='quit'){states.push(pathMerchant);await endGame();}
+  else{add('Say something to him!');await pathMerchant();}
+}
+
+async function pathMerchantWin(){
+  add('The merchant grins and gives you 200 Gold for defeating the Dragon!');
+  purse+=200;updateStats();
+  const c=await askQuestion('The merchant still has wares available. (shop/leave)');
+  if(c==='shop'){await shopMenu(pathMerchantWin,true);}
+  else if(c==='leave'){add('You leave gratefully.');await mountainPass();}
+  else if(c==='help'){states.push(pathMerchantWin);await help();}
+  else if(c==='quit'){states.push(pathMerchantWin);await endGame();}
+  else{add('Say something to him!');await pathMerchantWin();}
+}
+
+async function mountainPass(){
+  add('You reach the base of treacherous mountains and take a pass through them.');
+  const c=await askQuestion('Deep in the pass you discover a cave entrance. What will you do? (enter/continue/camp)');
+  if(c==='enter'){add('The cave glows with floating magic runes!');await magicCave();}
+  else if(c==='continue'){add('You ignore the cave and press on toward a distant city.');await cityLose();}
+  else if(c==='camp'){add('You camp in the cold pass.');health=100;add('Health: '+health);updateStats();await mountainPass();}
+  else if(c==='help'){states.push(mountainPass);await help();}
+  else if(c==='quit'){states.push(mountainPass);await endGame();}
+  else{add("It's cold! Make a decision!");await mountainPass();}
+}
+
+async function magicCave(){
+  const c=await askQuestion('Magic runes float around you. Will you explore or pass through? (explore/continue/camp)');
+  if(c==='explore'){
+    add('A sword juts from a rock. You grasp the hilt and pull it free.');
+    add('An ancient power flows through you as you give it a test swing.');
+    weapons.push('Sword of Neramar');add('You wield the '+weapons[weapons.length-1]+'!');updateStats();await cityWin();
+  }
+  else if(c==='continue'){add('You exit the cave to see a city in the distance.');await cityLose();}
+  else if(c==='camp'){add('You camp among the floating runes.');health=100;add('Health: '+health);updateStats();await magicCave();}
+  else if(c==='help'){states.push(magicCave);await help();}
+  else if(c==='quit'){states.push(magicCave);await endGame();}
+  else{add('You must make a choice, '+names[names.length-1]+'!');await magicCave();}
+}
+
+async function cityWin(){
+  add('You enter the city with the '+weapons[weapons.length-1]+' on your hip. People bow as you pass.');
+  add('A procession of knights falls in behind you. You are directed to the castle and crowned ruler!');
+  add('You are given 300 Gold Coins for your triumph!');purse+=300;
+  add('A knight warns you of a distant Lich King who threatens the kingdom. Your work is not over.');
+  updateStats();
+  const c=await askQuestion('With the Lich King\'s threat in mind, what will you do? (leave/shop/rest)');
+  if(c==='leave'){add('You set out with grim determination to find the Lich King.');await badlands();}
+  else if(c==='shop'){await shopMenu(cityWin);}
+  else if(c==='rest'){add('You rest in the royal chambers, fully restored.');health=100;updateStats();await cityWin();}
+  else if(c==='help'){states.push(cityWin);await help();}
+  else if(c==='quit'){states.push(cityWin);await endGame();}
+  else{add("I didn't quite understand that, my lord.");await cityWin();}
+}
+
+async function cityLose(){
+  add('You enter the city to indifferent stares. To them you\'re just another foolish adventurer.');
+  add('You settle here, living in poverty, telling anyone who will listen of your glory days until your death.','die');
+  const c=await askQuestion('Thank you for playing! Would you like to play again? (yes/no)');
+  if(c==='yes')await startGame();
+  else if(c==='no')add('Farewell.','sys');
+  else{add('Speak up, peasant!');await cityLose();}
+}
+
+async function badlands(){
+  add('The air grows arid as you approach a rocky, sandy terrain.');
+  const c=await askQuestion('Two paths lie before you. Which will you take? (left/right/camp)');
+  if(c==='left'){add('You enter a small valley.');await orcs();}
+  else if(c==='right'){add('You walk across a flat rock bed.');await sandworm();}
+  else if(c==='camp'){add('You make camp.');health=100;add('Health: '+health);updateStats();await badlands();}
+  else if(c==='help'){states.push(badlands);await help();}
+  else if(c==='quit'){states.push(badlands);await endGame();}
+  else{add('You must make a decision!');await badlands();}
+}
+
+async function orcs(){
+  add('Everything goes eerily quiet before Orcs appear on the ridges above you!');
+  const c=await askQuestion('What will you do? (fight/run/surrender)');
+  if(c==='fight'){add('Prepare yourself, '+names[names.length-1]+'!');await orcFight();}
+  else if(c==='run'){add('You escape safely, but need to catch your breath.');await badlands();}
+  else if(c==='surrender'){add('The Orcs laugh darkly before striking you down!');await death();}
+  else if(c==='help'){states.push(orcs);await help();}
+  else if(c==='quit'){states.push(orcs);await endGame();}
+  else{add('Make a decision!');await orcs();}
+}
+
+async function orcFight(){
+  const od=30;
+  if(orcHealth<=0){add('You are victorious!','win');purse+=60;add('Gold: '+purse);updateStats();await desertCave();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('What will you do? (attack/defend/run)');
+  if(c==='attack'){add('They have the high ground — your attack deals 40! They counter attack!');orcHealth-=40;add('Orc HP: '+orcHealth);applyDamage(od);add('Health: '+health+' | Armor: '+armor);updateStats();await orcFight();}
+  else if(c==='defend'){add('You block most of the incoming attacks.');applyDamage(od);add('Health: '+health+' | Armor: '+armor);updateStats();await orcFight();}
+  else if(c==='run'){add('You narrowly escape the Orc ambush!');await badlands();}
+  else{add('The Orcs are notching arrows! Decide!');await orcFight();}
+}
+
+async function sandworm(){
+  add('The ground rumbles and a massive Sandworm erupts from the sand, its maw pointed at you!');
+  const c=await askQuestion('What will you do? (fight/run/surrender)');
+  if(c==='fight'){add('Prepare yourself, '+names[names.length-1]+'!');await sandwormFight();}
+  else if(c==='run'){add('You somehow escape back to where you started!');await badlands();}
+  else if(c==='surrender'){add('The Sandworm shows no mercy and swallows you whole.');await death();}
+  else if(c==='help'){states.push(sandworm);await help();}
+  else if(c==='quit'){states.push(sandworm);await endGame();}
+  else{add('Make a decision!');await sandworm();}
+}
+
+async function sandwormFight(){
+  const sd=40;
+  if(sandwormHealth<=0){add('You are victorious!','win');purse+=60;add('Gold: '+purse);updateStats();await desert();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('What will you do? (attack/defend/run)');
+  if(c==='attack'){add('You strike the Sandworm hard! It counter attacks!');sandwormHealth-=40;add('Sandworm HP: '+sandwormHealth);applyDamage(sd);add('Health: '+health+' | Armor: '+armor);updateStats();await sandwormFight();}
+  else if(c==='defend'){add('You brace and block most of the hit.');applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await sandwormFight();}
+  else if(c==='run'){add('You run and narrowly escape!');await badlands();}
+  else{add('It\'s ready to devour you! Decide!');await sandwormFight();}
+}
+
+async function desert(){
+  const c=await askQuestion('A vast Desert stretches before you. What will you do? (oasis/continue/camp)');
+  if(c==='oasis'){add('You walk toward a distant Oasis.');await oasis();}
+  else if(c==='continue'){add('You take a different path, unsure if the Oasis is real.');await silverHills();}
+  else if(c==='camp'){add('You make camp.');health=100;add('Health: '+health);updateStats();await desert();}
+  else if(c==='help'){states.push(desert);await help();}
+  else if(c==='quit'){states.push(desert);await endGame();}
+  else{add('Make a decision!');await desert();}
+}
+
+async function desertCave(){
+  const c=await askQuestion('You find yourself inside a cave system. What do you do? (explore/continue/camp)');
+  if(c==='explore'){add('You find rare jewels! You pocket them all.');purse+=300;add('Gold: '+purse);updateStats();await coast();}
+  else if(c==='continue'){add('You head straight for the exit.');await coast();}
+  else if(c==='camp'){add('You make camp and weigh your options.');health=100;updateStats();await desertCave();}
+  else if(c==='help'){states.push(desertCave);await help();}
+  else if(c==='quit'){states.push(desertCave);await endGame();}
+  else{add('Make a decision!');await desertCave();}
+}
+
+async function coast(){
+  add('You emerge from the caves onto a refreshing, salty coast.');
+  const c=await askQuestion('A village is visible in the distance. What will you do? (village/continue/camp)');
+  if(c==='village'){add('The village reveals itself as a fishing village.');await fishingVillage();}
+  else if(c==='continue'){add('You travel past, wary of its sea-side location.');await silverHills();}
+  else if(c==='camp'){add('You make camp by the sea.');health=100;updateStats();await coast();}
+  else if(c==='help'){states.push(coast);await help();}
+  else if(c==='quit'){states.push(coast);await endGame();}
+  else{add('Make a decision!');await coast();}
+}
+
+async function fishingVillage(){
+  add('You enter the Fishing Village. Sullen citizens eye you warily.');
+  const c=await askQuestion('There\'s an inn and a shop. What do you do? (explore/shop/rest)');
+  if(c==='explore'){
+    add('An old fisherman beckons you closer.');
+    const a=await askQuestion('He says a Kraken has been terrorizing the waters. Will you kill it? (yes/no)');
+    if(a==='yes'){add('He guides you to a boat. You sail toward the beast.');await krakenFight();}
+    else if(a==='no'){add('The old fisherman nods, disappointed.');await fishingVillageNo();}
+    else{add('He\'s waiting for an answer!');await fishingVillage();}
+  }
+  else if(c==='shop'){await shopMenu(fishingVillage);}
+  else if(c==='rest'){add('You pay for a room and rest.');health=100;purse-=10;add('Health: '+health+' | Gold: '+purse);updateStats();await fishingVillage();}
+  else if(c==='help'){states.push(fishingVillage);await help();}
+  else if(c==='quit'){states.push(fishingVillage);await endGame();}
+  else{add('Make a decision!');await fishingVillage();}
+}
+
+async function fishingVillageNo(){
+  const c=await askQuestion('There still isn\'t much to do. What will you do? (leave/shop/rest)');
+  if(c==='leave'){add('You leave the village and continue your journey.');await silverHills();}
+  else if(c==='shop'){await shopMenu(fishingVillageNo);}
+  else if(c==='rest'){add('You pay for a room and rest.');health=100;purse-=10;add('Health: '+health+' | Gold: '+purse);updateStats();await fishingVillageNo();}
+  else{add('Make a decision!');await fishingVillageNo();}
+}
+
+async function krakenFight(){
+  const kd=60;
+  if(krakenHealth<=0){add('You are victorious!','win');purse+=80;add('Gold: '+purse);updateStats();await krakenWin();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('The Kraken bursts from the water! You can\'t escape! (attack/defend)');
+  if(c==='attack'){add('You strike hard! The Kraken counter attacks!');krakenHealth-=70;add('Kraken HP: '+krakenHealth);applyDamage(kd);add('Health: '+health+' | Armor: '+armor);updateStats();await krakenFight();}
+  else if(c==='defend'){add('You brace and block most of it.');applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await krakenFight();}
+  else{add('It\'s pulling you toward the depths! Decide!');await krakenFight();}
+}
+
+async function krakenWin(){
+  add('You sail back to triumphant applause! The fisherman presses 200 Gold into your hands.');
+  purse+=200;add('Gold: '+purse);updateStats();
+  const c=await askQuestion('What will you do now? (leave/shop/rest)');
+  if(c==='leave'){add('You leave the village and continue your journey.');await silverHills();}
+  else if(c==='shop'){await shopMenu(krakenWin);}
+  else if(c==='rest'){add('You pay for a room and rest.');health=100;purse-=10;add('Health: '+health+' | Gold: '+purse);updateStats();await krakenWin();}
+  else if(c==='help'){states.push(krakenWin);await help();}
+  else if(c==='quit'){states.push(krakenWin);await endGame();}
+  else{add('Make a decision!');await krakenWin();}
+}
+
+async function oasis(){
+  add('You find a thriving village nestled in the lush greenery of an Oasis.');
+  const c=await askQuestion('There\'s a shop and an inn. What will you do? (explore/shop/rest)');
+  if(c==='explore'){
+    const a=await askQuestion('A haunted young warrior asks you to slay the elemental that killed his friends. (yes/no)');
+    if(a==='yes'){add('You accept and set out toward the Elemental.');await sandElementalFight();}
+    else if(a==='no'){add('His head lowers with a hopeless look in his eyes.');await oasisNo();}
+    else{add('He deserves an answer!');await oasis();}
+  }
+  else if(c==='shop'){await shopMenu(oasis);}
+  else if(c==='rest'){add('You rest your weary bones at the inn.');health=100;add('Health: '+health);updateStats();await oasis();}
+  else if(c==='help'){states.push(oasis);await help();}
+  else if(c==='quit'){states.push(oasis);await endGame();}
+  else{add('The Oasis is beautiful, but you need to make a choice.');await oasis();}
+}
+
+async function oasisNo(){
+  const c=await askQuestion('The Oasis still has options. What will you do? (leave/shop/rest)');
+  if(c==='leave'){add('You leave and continue your journey.');await silverHills();}
+  else if(c==='shop'){await shopMenu(oasisNo);}
+  else if(c==='rest'){add('You rest at the inn.');health=100;purse-=10;add('Health: '+health+' | Gold: '+purse);updateStats();await oasisNo();}
+  else if(c==='help'){states.push(oasisNo);await help();}
+  else if(c==='quit'){states.push(oasisNo);await endGame();}
+  else{add('You still need to decide.');await oasisNo();}
+}
+
+async function sandElementalFight(){
+  add('You find an ethereal figure of swirling sand. It senses you and attacks!');
+  const sed=60;
+  if(sandElementalHealth<=0){add('You are victorious!','win');purse+=80;add('Gold: '+purse);updateStats();await sandWin();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('You can\'t escape! What do you do? (attack/defend)');
+  if(c==='attack'){add('You strike! The sand has a natural defense against your blade. It counter attacks!');sandElementalHealth-=40;add('Elemental HP: '+sandElementalHealth);applyDamage(sed);add('Health: '+health+' | Armor: '+armor);updateStats();await sandElementalFight();}
+  else if(c==='defend'){add('You brace and absorb most of the hit.');applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await sandElementalFight();}
+  else{add('It\'s eager to end you! Decide!');await sandElementalFight();}
+}
+
+async function sandWin(){
+  add('You return victorious! The young warrior presses 300 Gold into your grateful hands.');
+  purse+=300;add('Gold: '+purse);updateStats();
+  const c=await askQuestion('You look around the Oasis. What will you do? (leave/shop/rest)');
+  if(c==='leave'){add('You leave and continue your journey.');await silverHills();}
+  else if(c==='shop'){await shopMenu(sandWin);}
+  else if(c==='rest'){add('You rest at the inn.');health=100;purse-=10;add('Health: '+health+' | Gold: '+purse);updateStats();await sandWin();}
+  else if(c==='help'){states.push(sandWin);await help();}
+  else if(c==='quit'){states.push(sandWin);await endGame();}
+  else{add('Make a decision.');await sandWin();}
+}
+
+async function silverHills(){
+  add('You enter a pine forest with wisps of snow on the ground. Earthy and fresh — but you stay alert.');
+  const c=await askQuestion('What will you do? (explore/continue/camp)');
+  if(c==='explore'){add('You find 10 Gold Coins among the trees!');purse+=10;add('Gold: '+purse);updateStats();await iceElementalFight();}
+  else if(c==='continue'){add('You press on, watching the swirling snow.');await iceElementalFight();}
+  else if(c==='camp'){add('You make camp in the pines.');health=100;add('Health: '+health);updateStats();await silverHills();}
+  else if(c==='help'){states.push(silverHills);await help();}
+  else if(c==='quit'){states.push(silverHills);await endGame();}
+  else{add('Make a decision!');await silverHills();}
+}
+
+async function iceElementalFight(){
+  add('An ethereal figure of swirling ice and snow blocks your path!');
+  const ied=60;
+  if(iceElementalHealth<=0){add('You are victorious!','win');purse+=80;add('Gold: '+purse);updateStats();await winteryPines();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('You can\'t escape! What do you do? (attack/defend)');
+  if(c==='attack'){add('You strike! The blade has a natural advantage — the Ice Elemental reels but counter attacks!');iceElementalHealth-=70;add('Elemental HP: '+iceElementalHealth);applyDamage(ied);add('Health: '+health+' | Armor: '+armor);updateStats();await iceElementalFight();}
+  else if(c==='defend'){add('You block most of the incoming ice.');applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await iceElementalFight();}
+  else{add('It\'s eager to freeze you! Decide!');await iceElementalFight();}
+}
+
+async function winteryPines(){
+  add('You emerge victorious at the far edge of the pine forest, snow all around you.');
+  const c=await askQuestion('A village lies ahead, but you can bypass it. What will you do? (village/bypass/camp)');
+  if(c==='village'){add('You approach the village feeling the Lich King\'s oppressive presence intensify.');await winterVillage();}
+  else if(c==='bypass'){add('You let the Lich King\'s dark presence guide you toward him.');await lichCrypt();}
+  else if(c==='camp'){add('You make camp and weigh your decisions.');health=100;add('Health: '+health);updateStats();await winteryPines();}
+  else if(c==='help'){states.push(winteryPines);await help();}
+  else if(c==='quit'){states.push(winteryPines);await endGame();}
+  else{add('Make a decision!');await winteryPines();}
+}
+
+async function winterVillage(){
+  add('You enter the village. The oppressive weight of the Lich King\'s presence is almost physical here.');
+  const c=await askQuestion('The villagers trudge as if pressed down. What will you do? (explore/shop/rest)');
+  if(c==='explore'){
+    add('The mayor tells you the Lich King demands sacrifices to prevent enslavement — yet his presence alone starves them.');
+    add('He points you toward the crypt with a sympathetic look.');await lichCrypt();
+  }
+  else if(c==='shop'){add('A depressed shopkeeper tends to a depressed assistant.');await shopMenu(winterVillage);}
+  else if(c==='rest'){add('You pay the sullen innkeeper and rest.');health=100;purse-=10;add('Gold: '+purse);updateStats();await winterVillage();}
+  else if(c==='help'){states.push(winterVillage);await help();}
+  else if(c==='quit'){states.push(winterVillage);await endGame();}
+  else{add('The Lich King\'s threat is real! Decide!');await winterVillage();}
+}
+
+async function lichCrypt(){
+  add('You enter the Lich\'s crypt. His oppression envelops you like a shroud.');
+  add('The Sword of Neramar begins to glow on your hip, its light seeping from the sheathe.');
+  add('You draw it slowly. Its light makes clear this is the moment it was forged for.');
+  const c=await askQuestion('You see two options in the dark. (explore/straight/camp)');
+  if(c==='explore'){
+    add('You search the coffins and find a glowing amulet. Power surges through you as you don it.');
+    amulet.push('Amulet of Divine Light');add('You now wear the '+amulet[amulet.length-1]+'!');await lichKing();
+  }
+  else if(c==='straight'){add('You push toward the source of the presence with grim determination.');await lichKing();}
+  else if(c==='camp'){add('You rest — the presence bearing down on you.');health=100;add('Health: '+health);updateStats();await lichCrypt();}
+  else if(c==='help'){states.push(lichCrypt);await help();}
+  else if(c==='quit'){states.push(lichCrypt);await endGame();}
+  else{add('You need to make a decision!');await lichCrypt();}
+}
+
+async function lichKing(){
+  add('The Lich King looms on his throne. He rises and approaches with deadly intent.');
+  if(amulet.length>0&&amulet[amulet.length-1]==='Amulet of Divine Light'){
+    lichHealth-=100;amulet.pop();
+    add('The Amulet of Divine Light blazes! It deals 100 damage to the Lich King!','win');
+    add('Lich King HP: '+lichHealth);
+  }
+  const ld=60;
+  if(lichHealth<=0){add('You are victorious!','win');purse+=80;updateStats();await cityWinGame();return;}
+  if(health<=0){await death();return;}
+  const c=await askQuestion('You cannot flee! What do you do? (attack/defend)');
+  if(c==='attack'){
+    add('You strike hard! The Lich King staggers, then counter attacks!');
+    lichHealth-=50;add('Lich King HP: '+lichHealth);
+    applyDamage(ld);add('Health: '+health+' | Armor: '+armor);updateStats();await lichKing();
+  }
+  else if(c==='defend'){
+    add('You weather the assault, blocking most of his dark power.');
+    applyDamage(20);add('Health: '+health+' | Armor: '+armor);updateStats();await lichKing();
+  }
+  else{add('He\'s preparing another strike! Decide!');await lichKing();}
+}
+
+async function cityWinGame(){
+  add('You stand over the Lich King\'s dissolving body as peace washes over you.','win');
+  add('You sheathe your sword as it slowly dims and exit the crypt into the light.');
+  add('You return to the city to fanfare and cheering crowds.');
+  add('A golden crown is placed on your head. You are led on horseback through adoring crowds to the castle.');
+  add('You take your place on the throne. You rule with justice and fairness for the rest of your days.','win');
+  await winGame();
+}
+
+async function winGame(){
+  add('Congratulations, '+names[names.length-1]+'! You have won The Sword of Neramar! Thank you for playing!','win');
+  const c=await askQuestion('Would you like to play again? (yes/no)');
+  if(c==='yes')await startGame();
+  else add('Farewell, noble adventurer. Your legend lives on forever.','sys');
+}
+
+startGame();
+</script>
+</body>
+</html>
